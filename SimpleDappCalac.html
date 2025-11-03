@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <title>Preprost DApp Kalkulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; }
+        input, button { padding: 8px; margin: 5px; }
+        #result { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>DApp Kalkulator</h1>
+    <div>
+        <input type="number" id="num1" placeholder="Število 1" value="5">
+        <input type="number" id="num2" placeholder="Število 2" value="3">
+    </div>
+    <div>
+        <button onclick="calculate('add')">+</button>
+        <button onclick="calculate('subtract')">-</button>
+        <button onclick="calculate('multiply')">×</button>
+        <button onclick="calculate('divide')">÷</button>
+    </div>
+    <div id="result">Rezultat: </div>
+
+    <script>
+        // Naslov pogodbe (kopiraj iz Remix po deployu)
+        const CONTRACT_ADDRESS = "0x7EFf42626428CCA580f0dF25E92c3f38Cd9ff67B"; // Zamenjaj s svojim naslovom!
+        let provider;
+        let contract;
+
+        // Poveži se z MetaMaskom in pogodbo
+        async function connect() {
+            if (window.ethereum) {
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                const signer = provider.getSigner();
+                const abi = [
+                    "function add(uint256, uint256) public pure returns (uint256)",
+                    "function subtract(uint256, uint256) public pure returns (uint256)",
+                    "function multiply(uint256, uint256) public pure returns (uint256)",
+                    "function divide(uint256, uint256) public pure returns (uint256)"
+                ];
+                contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
+            } else {
+                alert("Namesti MetaMask!");
+            }
+        }
+
+        // Izračunaj in prikaži rezultat
+        async function calculate(operation) {
+            await connect();
+            const num1 = parseInt(document.getElementById("num1").value);
+            const num2 = parseInt(document.getElementById("num2").value);
+
+            let result;
+            try {
+                if (operation === "add") result = await contract.add(num1, num2);
+                else if (operation === "subtract") result = await contract.subtract(num1, num2);
+                else if (operation === "multiply") result = await contract.multiply(num1, num2);
+                else if (operation === "divide") result = await contract.divide(num1, num2);
+
+                document.getElementById("result").textContent = `Rezultat: ${result.toString()}`;
+            } catch (error) {
+                document.getElementById("result").textContent = `Napaka: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
